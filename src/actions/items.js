@@ -2,6 +2,8 @@ export const GET_ITEMS = 'GET_ITEMS';
 export const FAIL_ITEMS = 'FAIL_ITEMS';
 export const SAVE_ITEM = 'SAVE_ITEM';
 export const FAIL_ITEM = 'FAIL_ITEM';
+export const GET_ITEMTYPES = 'GET_ITEMTYPES';
+export const FAIL_ITEMTYPES = 'FAIL_ITEMTYPES';
 
 export const getItems = () => async (dispatch, getState) => {
   const state = getState();
@@ -80,4 +82,35 @@ export const saveItem = (item) => (dispatch, getState) => {
           item
         });
       });
+};
+
+export const getItemTypes = () => async (dispatch, getState) => {
+  const state = getState();
+  if (state.app.user === null) {
+    return {
+      type: FAIL_ITEMTYPES
+    };
+  }
+  const token = state.app.user.access_token;
+  fetch('http://localhost:4000/graphql', {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            "Authorization": "Bearer " + token
+        },
+        redirect: "follow",
+        referrer: "no-referrer",
+        body: '{"query":"{itemtypes {id, name}}"}'
+      })
+        .then(res => res.json())
+        .then(response => {
+          const itemtypes = response.data.itemtypes;
+          dispatch({
+            type: GET_ITEMTYPES,
+            itemtypes
+          });
+        });
 };

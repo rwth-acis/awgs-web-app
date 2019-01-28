@@ -16,7 +16,7 @@ import {PageViewElement} from './page-view-element.js';
 import {store} from '../store.js';
 
 // These are the actions needed by this element.
-import {getItems, saveItem} from '../actions/items.js';
+import {getItems, saveItem, getItemTypes} from '../actions/items.js';
 
 // We are lazy loading its reducer.
 import items from '../reducers/items.js';
@@ -83,7 +83,7 @@ class ViewItems extends connect(store)(PageViewElement) {
             <h3>Register a new AWGS ID</h3>
             <vaadin-form-layout>
               <vaadin-text-field label="AWGS ID (preliminary)" value=${this._nextId} readonly></vaadin-text-field>
-              <vaadin-combo-box id="register-form-type" label="Type" .dataProvider=${this._provideDataType}></vaadin-combo-box>
+              <vaadin-combo-box id="register-form-type" label="Type" .dataProvider=${this._provideDataType.bind(this)}></vaadin-combo-box>
               <vaadin-text-field id="register-form-name" label="Name"></vaadin-text-field>
               <vaadin-text-area id="register-form-description" label="Description"></vaadin-text-area>
               <vaadin-text-field id="register-form-url" label="URL (BSCW or similar)"
@@ -113,6 +113,7 @@ class ViewItems extends connect(store)(PageViewElement) {
   static get properties() {
     return {
       _items: {type: Array},
+      _itemtypes: {type: Array},
       _nextId: {type: String}
     }
   }
@@ -137,6 +138,7 @@ class ViewItems extends connect(store)(PageViewElement) {
     if (state.app.user && (state.items.items.length === 0)) {
       //TODO: use wait-for-redux or something similar for automatically dispatching once we're signed in
       store.dispatch(getItems());
+      store.dispatch(getItemTypes());
     }
     if (state.items.items.length > 0) {
       this._items = state.items.items.map(item => {
@@ -163,6 +165,9 @@ class ViewItems extends connect(store)(PageViewElement) {
       // in case we just sent an item to the server reset the form
       //TODO: only reset after saving item
       this._resetForm();
+    }
+    if (state.items.itemtypes.length > 0) {
+      this._itemtypes = state.items.itemtypes;
     }
   }
 
@@ -221,25 +226,6 @@ class ViewItems extends connect(store)(PageViewElement) {
       callback(itemtypesFiltered, itemtypesFiltered.length);
       return true;
     }
-    fetch('http://localhost:4000/graphql', {
-        method: "POST",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
-        redirect: "follow",
-        referrer: "no-referrer",
-        body: '{"query":"{itemtypes {id, name}}"}'
-      })
-        .then(res => res.json())
-        .then(response => {
-          let itemtypes = response.data.itemtypes;
-          let itemtypesSorted = itemtypes.map(itemtype => itemtype.name).sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
-          callback(itemtypesSorted, itemtypes.length);
-          this._itemtypes = itemtypes;
-        });
   }
 
 }

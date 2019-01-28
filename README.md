@@ -11,5 +11,7 @@ If the app is served from another host, change the `http://127.0.0.1:8081/` URLs
 to your production URL.
 
 ## Build Configurations
-The default build configurations from `pwa-starter-kit` have been changed with respect to the
-Service Worker (deactivated).
+The default build configurations from `pwa-starter-kit` have been changed with respect to the Service Worker (deactivated).
+
+If the app is served from the `/awgs/` path, build the project with
+`polymer build --base-path awgs`

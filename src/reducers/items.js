@@ -1,10 +1,12 @@
 import {
   GET_ITEMS,
-  SAVE_ITEM
+  SAVE_ITEM,
+  GET_ITEMTYPES
 } from '../actions/items.js';
 
 const INITIAL_STATE = {
   items: [],
+  itemtypes: [],
   error: ''
 };
 
@@ -22,6 +24,11 @@ const items = (state = INITIAL_STATE, action) => {
           ...state.items,
           action.item
         ]
+      };
+    case GET_ITEMTYPES:
+      return {
+        ...state,
+        itemtypes: action.itemtypes
       };
     default:
       return state;
