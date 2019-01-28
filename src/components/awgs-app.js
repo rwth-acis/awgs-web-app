@@ -198,9 +198,9 @@ class AWGSApp extends connect(store)(LitElement) {
                               clientid="ceb7ca9c-db40-4ad5-b26e-2d0490dd554f"
                               authority="https://api.learning-layers.eu/o/oauth2"
                               providername="Layers"
-                              popupredirecturi="http://127.0.0.1:8081/awgs/openidconnect-popup-signin-callback.html"
-                              popuppostlogoutredirecturi="http://127.0.0.1:8081/awgs/openidconnect-popup-signout-callback.html"
-                              silentredirecturi="http://127.0.0.1:8081/awgs/openidconnect-silent-callback.html"
+                              popupredirecturi="http://127.0.0.1:8081/openidconnect-popup-signin-callback.html"
+                              popuppostlogoutredirecturi="http://127.0.0.1:8081/openidconnect-popup-signout-callback.html"
+                              silentredirecturi="http://127.0.0.1:8081/openidconnect-silent-callback.html"
                               @signed-in=${this._handleSignedIn}
                               @signed-out=${this._handleSignedOut}></openidconnect-signin>
       </app-toolbar>
