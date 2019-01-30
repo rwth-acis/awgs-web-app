@@ -103,7 +103,7 @@ class ViewItems extends connect(store)(PageViewElement) {
           <vaadin-grid-sort-column path="id" direction="desc" header="ID" width="150px" flex-grow="0"></vaadin-grid-sort-column>
           <vaadin-grid-column path="name" header="Name"></vaadin-grid-column>
           <vaadin-grid-filter-column path="owner" header="Owner" width="100px" flex-grow="0"></vaadin-grid-filter-column>
-          <vaadin-grid-sort-column path="lastupdate" header="Last Update"width="200px" flex-grow="0"></vaadin-grid-sort-column>
+          <vaadin-grid-sort-column path="lastupdateString" header="Last Update"width="200px" flex-grow="0"></vaadin-grid-sort-column>
           <!--<vaadin-grid-column .renderer=${this._renderDetails}></vaadin-grid-column>-->
         </vaadin-grid>
       </section>
@@ -146,7 +146,7 @@ class ViewItems extends connect(store)(PageViewElement) {
         item.owner = item.owner.split('@')[0];
         // format date
         const date = new Date(parseInt(item.lastupdate));
-        item.lastupdate = date.toLocaleString();
+        item.lastupdateString = date.toLocaleString();
         return item;
       });
       
