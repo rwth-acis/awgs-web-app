@@ -150,7 +150,10 @@ class ViewItems extends connect(store)(PageViewElement) {
         return item;
       });
       
+      // sort array because we cannot rely on how the server returns the results
+      this._items.sort((a, b) => a.id.localeCompare(b.id));
       const [latestItem] = this._items.slice(-1);
+
       const lastIdSplit = latestItem.id.split('-');
       const currentYear = (new Date()).getFullYear();
       let newId = 'AWGS-' + currentYear + '-';
