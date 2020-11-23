@@ -11,12 +11,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {html} from 'lit-element';
 import {connect} from 'pwa-helpers/connect-mixin.js';
 import {PageViewElement} from './page-view-element.js';
+import {PolymerElement} from '@polymer/polymer';
+import '@polymer/paper-dialog/paper-dialog.js';
+import '@polymer/paper-button/paper-button.js';
 
 // This element is connected to the Redux store.
 import {store} from '../store.js';
 
 // These are the actions needed by this element.
-import {getItems, saveItem, getItemTypes} from '../actions/items.js';
+import {getItems, saveItem, updateItem, getItemTypes} from '../actions/items.js';
 
 // We are lazy loading its reducer.
 import items from '../reducers/items.js';
@@ -33,6 +36,7 @@ import '@vaadin/vaadin-text-field/vaadin-text-field.js';
 import '@vaadin/vaadin-text-field/vaadin-text-area.js';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box.js';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox.js';
+import '@vaadin/vaadin-icons/vaadin-icons.js';
 import {hourGlass} from './my-icons.js';
 
 // These are the shared styles needed by this element.
@@ -70,7 +74,29 @@ class ViewItems extends connect(store)(PageViewElement) {
         vaadin-grid {
           max-width: 100%;
           width: 100%;
+          overflow: hidden;
         }
+
+        paper-dialog {
+          width: 600px;
+        }
+        paper-dialog vaadin-text-field {
+          width: 90%;
+        }
+
+        paper-dialog vaadin-text-area {
+          width: 90%;
+        }
+
+        paper-dialog a {
+          color: black;
+          text-decoration: none; /* no underline */
+        }
+
+        vaadin-button{
+          cursor: pointer;
+        }
+
       </style>
       <section>
         <!--<h2>Items</h2>-->
@@ -99,13 +125,31 @@ class ViewItems extends connect(store)(PageViewElement) {
         </p>
       </section>
       <section>
-        <vaadin-grid height-by-rows .items=${this._items}>
+        <vaadin-grid height-by-rows .items=${this._items} id="itemgrid" on-selected-items-changed="onSelect">
           <vaadin-grid-sort-column path="id" direction="desc" header="ID" width="150px" flex-grow="0"></vaadin-grid-sort-column>
-          <vaadin-grid-column path="name" header="Name"></vaadin-grid-column>
+          <vaadin-grid-filter-column header="Name" .renderer=${this._renderNameDetails}>
+          </vaadin-grid-filter-column>
           <vaadin-grid-filter-column path="owner" header="Owner" width="100px" flex-grow="0"></vaadin-grid-filter-column>
           <vaadin-grid-sort-column path="lastupdateString" header="Last Update"width="200px" flex-grow="0"></vaadin-grid-sort-column>
           <!--<vaadin-grid-column .renderer=${this._renderDetails}></vaadin-grid-column>-->
         </vaadin-grid>
+        
+        <paper-dialog id="actions">
+      <h2 id="id"></h2>
+      <p>
+        <vaadin-text-field class="title" id="title" label="Title"></vaadin-text-field>
+        <vaadin-text-field id="owner" label="Owner"></vaadin-text-field><br>
+        <vaadin-text-area id="description" label="Description"></vaadin-text-area><br>
+        <vaadin-text-field id="url" label="URL"></vaadin-text-field>&emsp;<a id="urllink" target="_blank"><iron-icon icon="vaadin:external-link"></iron-icon></a><br>
+        
+        <vaadin-combo-box id="type" label="Type"></vaadin-combo-box>
+      </p>
+      </p>
+      <div class="buttons">
+        <paper-button dialog-dismiss>Cancel</paper-button>
+        <paper-button dialog-confirm autofocus id="updateItemButton">Apply</paper-button>
+      </div>
+    </paper-dialog>
       </section>
     `;
   }
@@ -114,11 +158,29 @@ class ViewItems extends connect(store)(PageViewElement) {
     return {
       _items: {type: Array},
       _itemtypes: {type: Array},
-      _nextId: {type: String}
+      _nextId: {type: String},
+      _diag: {type: Object}
     }
   }
 
   firstUpdated(changedProperties) {
+    var grid = this.shadowRoot.querySelector('#itemgrid');
+    var diag = this.shadowRoot.querySelector('#actions');
+    this._diag = diag;
+
+    var updateButton = this.shadowRoot.querySelector('#updateItemButton');
+    updateButton.addEventListener ("click", function() {
+      let item = {};
+      // escape all double-quote chars in a string if it's not already escaped
+      item.id = diag.querySelector('#id').innerHTML.replace(/\\([\s\S])|(")/g,"\\$1$2");
+      item.typeString = diag.querySelector('#type').value.replace(/\\([\s\S])|(")/g,"\\$1$2");
+      item.name = diag.querySelector('#title').value.replace(/\\([\s\S])|(")/g,"\\$1$2");
+      item.description = diag.querySelector('#description').value.replace(/\\([\s\S])|(")/g,"\\$1$2");
+      item.url = diag.querySelector('#url').value.replace(/\\([\s\S])|(")/g,"\\$1$2");
+      item.owner = diag.querySelector('#owner').value.replace(/\\([\s\S])|(")/g,"\\$1$2");
+  
+      store.dispatch(updateItem(item));
+    }, false);
     /*
     const grid = this.shadowRoot.querySelector('vaadin-grid');
     grid.rowDetailsRenderer = function(root, grid, rowData) {
@@ -132,6 +194,31 @@ class ViewItems extends connect(store)(PageViewElement) {
     };
     */
   }
+  _renderNameDetails(root, column, rowData) {
+      root.innerHTML = `<vaadin-button theme="tertiary">${rowData.item.name}</vaadin-button>`;
+      root.firstElementChild.addEventListener('click', function(e) {
+        var d = rowData.item.diag;
+        var title = d.querySelector("#title");
+        title.value = rowData.item.name;
+        var id = d.querySelector("#id");
+        id.innerHTML = rowData.item.id;
+        var desc = d.querySelector("#description");
+        desc.value = rowData.item.description;
+        var type = d.querySelector("#type");
+        type.value = rowData.item.type.name;
+        var owner = d.querySelector("#owner");
+        owner.value = rowData.item.owner;
+        var url = d.querySelector("#url");
+        url.value = rowData.item.url;
+        var urllink = d.querySelector("#urllink");
+        urllink.setAttribute('href', rowData.item.url);
+        
+        rowData.item.diag.open();
+      });
+    //root.item = rowData.item;
+    //root.firstElementChild.checked = grid.detailsOpenedItems.indexOf(root.item) > -1;
+    
+  };
 
    // This is called every time something is updated in the store.
   stateChanged(state) {
@@ -141,15 +228,16 @@ class ViewItems extends connect(store)(PageViewElement) {
       store.dispatch(getItemTypes());
     }
     if (state.items.items.length > 0) {
+      var diag = this._diag;
       this._items = state.items.items.map(item => {
         // strip owner name
         item.owner = item.owner.split('@')[0];
         // format date
         const date = new Date(parseInt(item.lastupdate));
         item.lastupdateString = date.toLocaleString();
+        item.diag = diag;
         return item;
       });
-      
       // sort array because we cannot rely on how the server returns the results
       this._items.sort((a, b) => a.id.localeCompare(b.id));
       const [latestItem] = this._items.slice(-1);
@@ -171,6 +259,8 @@ class ViewItems extends connect(store)(PageViewElement) {
     }
     if (state.items.itemtypes.length > 0) {
       this._itemtypes = state.items.itemtypes;
+      var type = this.shadowRoot.querySelector("#type");
+      type.items = this._itemtypes.map(x => x.name);
     }
   }
 
@@ -195,6 +285,7 @@ class ViewItems extends connect(store)(PageViewElement) {
     this.shadowRoot.querySelector('.form').style.display = 'block';
     this.shadowRoot.querySelector('#button-open-form').style.display = 'none';
   }
+
 
   _handleRegisterClick(e) {
     let item = {};

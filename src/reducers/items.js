@@ -1,6 +1,7 @@
 import {
   GET_ITEMS,
   SAVE_ITEM,
+  UPDATE_ITEM,
   GET_ITEMTYPES
 } from '../actions/items.js';
 
@@ -25,6 +26,13 @@ const items = (state = INITIAL_STATE, action) => {
           action.item
         ]
       };
+    case UPDATE_ITEM:
+        const i = state.items.findIndex(x => x.id === action.item.id);
+        state.items[i] = action.item;
+        return {
+          ...state,
+          items: state.items
+        };
     case GET_ITEMTYPES:
       return {
         ...state,
